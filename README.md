@@ -2,7 +2,7 @@
 
 **Arena of Models** — это веб-приложение для проведения интеллектуальных диалогов между двумя языковыми моделями с последующей оценкой независимым судьёй.
 
-![Version](https://img.shields.io/badge/version-2.3-blue)
+![Version](https://img.shields.io/badge/version-2.4-blue)
 ![Python](https://img.shields.io/badge/python-3.8+-green)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688)
 ![Ollama](https://img.shields.io/badge/Ollama-required-orange)
@@ -36,6 +36,7 @@
 - **Автопереподключение** — при обрыве SSE соединение восстанавливается
 - **Чистка ответов** — автоматическое удаление префиксов, эмодзи и англицизмов
 - **Адаптивный интерфейс** — работает на десктопе и мобильных устройствах
+- **Конфигурация через .env** — гибкая настройка без изменения кода
 
 ---
 
@@ -64,10 +65,28 @@ cd arena-of-models
 ### 2. Установка зависимостей
 
 ```bash
-pip install fastapi uvicorn httpx
+pip install -r requirements.txt
 ```
 
-### 3. Установка и запуск Ollama
+### 3. Настройка конфигурации
+
+Скопируйте шаблон конфигурации и отредактируйте при необходимости:
+
+```bash
+cp .env.example .env
+# Отредактируйте .env под ваши нужды
+```
+
+**Основные параметры в `.env`:**
+- `OLLAMA_URL` — адрес Ollama API
+- `DEFAULT_MODELS` — модели для арены (через запятую)
+- `JUDGE_MODEL` — модель судьи
+- `TEMPERATURE` — креативность (0.0–1.0)
+- `MAX_TURNS` — максимальное количество ходов
+- `PORT` — порт сервера
+- `LOG_LEVEL` — уровень логирования
+
+### 4. Установка и запуск Ollama
 
 ```bash
 # Linux / macOS
@@ -221,19 +240,36 @@ POST /api/arena/start
 
 ## ⚙️ Настройка
 
-### Конфигурация в `app.py`
+### Конфигурация через `.env`
 
-```python
-# ========== КОНФИГ ==========
-OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-DEFAULT_MODELS = ["llama3.2:latest", "ruadapt-qwen2.5-14b:latest"]
-JUDGE_MODEL = "ruadapt-qwen2.5-14b:latest"
-TEMPERATURE = 0.8          # Креативность (0.0 - 1.0)
-MAX_TURNS = 8              # Максимальное количество ходов
-MAX_TOKENS = 400           # Токенов на ответ модели
-MAX_TOKENS_JUDGE = 800     # Токенов на вердикт судьи
-DB_PATH = "arena.db"       # Путь к базе данных
+Все параметры вынесены в файл `.env` (скопируйте из `.env.example`):
+
+```bash
+# Основные настройки
+OLLAMA_URL=http://127.0.0.1:11434/api/chat
+DEFAULT_MODELS=llama3.2:latest,ruadapt-qwen2.5-14b:latest
+JUDGE_MODEL=ruadapt-qwen2.5-14b:latest
+
+# Параметры генерации
+TEMPERATURE=0.8          # Креативность (0.0 - 1.0)
+MAX_TURNS=8              # Максимальное количество ходов
+MAX_TOKENS=400           # Токенов на ответ модели
+MAX_TOKENS_JUDGE=800     # Токенов на вердикт судьи
+
+# Сервер
+HOST=0.0.0.0
+PORT=8080
+LOG_LEVEL=info
+
+# База данных
+DB_PATH=arena.db
 ```
+
+**Преимущества конфигурации через `.env`:**
+- ✅ Не нужно менять код
+- ✅ Можно использовать разные конфиги для dev/prod
+- ✅ Безопасное хранение чувствительных данных
+- ✅ Легко менять параметры перед запуском
 
 ### Изменение промптов
 
