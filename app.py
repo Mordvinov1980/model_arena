@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-🏟️ Arena of Models v2.3
-✅ Судья | ✅ Анти-повторение | ✅ Жёсткая русификация | ✅ Без эмодзи
+🏟️ Arena of Models v2.4
+✅ Судья | ✅ Анти-повторение | ✅ Жёсткая русификация | ✅ Без эмодзи | ✅ .env конфиг
 """
 import json, asyncio, httpx, uuid, sqlite3, re, os
 from datetime import datetime
@@ -9,17 +9,24 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 import uvicorn
 
+# ========== ЗАГРУЗКА КОНФИГА ИЗ .ENV ==========
+load_dotenv()
+
 # ========== КОНФИГ ==========
-OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
-DEFAULT_MODELS = ["llama3.2:latest", "ruadapt-qwen2.5-14b:latest"]
-JUDGE_MODEL = "ruadapt-qwen2.5-14b:latest"
-TEMPERATURE = 0.8
-MAX_TURNS = 8
-MAX_TOKENS = 400
-MAX_TOKENS_JUDGE = 800
-DB_PATH = "arena.db"
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/chat")
+DEFAULT_MODELS = [m.strip() for m in os.getenv("DEFAULT_MODELS", "llama3.2:latest,ruadapt-qwen2.5-14b:latest").split(",")]
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", "ruadapt-qwen2.5-14b:latest")
+TEMPERATURE = float(os.getenv("TEMPERATURE", "0.8"))
+MAX_TURNS = int(os.getenv("MAX_TURNS", "8"))
+MAX_TOKENS = int(os.getenv("MAX_TOKENS", "400"))
+MAX_TOKENS_JUDGE = int(os.getenv("MAX_TOKENS_JUDGE", "800"))
+DB_PATH = os.getenv("DB_PATH", "arena.db")
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8080"))
+LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 
 # ========== БАЗА ДАННЫХ ==========
 def init_db():
@@ -346,7 +353,7 @@ async def delete_session(sid: str):
     return JSONResponse({"status":"ok"})
 
 if __name__ == "__main__":
-    print("🏟️ Arena v2.3 — запуск на http://0.0.0.0:8080")
+    print(f"🏟️ Arena v2.4 — запуск на http://{HOST}:{PORT}")
     print(f"⚖️ Судья: {JUDGE_MODEL}")
     print(f"🎭 Модели: {DEFAULT_MODELS[0]} ↔ {DEFAULT_MODELS[1]}")
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")
+    uvicorn.run(app, host=HOST, port=PORT, log_level=LOG_LEVEL)
