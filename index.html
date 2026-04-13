@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>🏟️ Арена Моделей</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/index.min.css" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .typing-dot {
+        animation: typing 1.4s infinite ease-in-out both;
+    }
+
+    .typing-dot:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes typing {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+
+    /* Скроллбар */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    #chat-container,
+    #view-history,
+    #modal-chat {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+
+
+    .pb-safe {
+        padding-bottom: max(16px, env(safe-area-inset-bottom, 20px));
+    }
+
+    .status-bar {
+        flex-shrink: 0 !important;
+        background: white;
+        z-index: 25;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+/* Мобильная версия */
+@media screen and (max-width: 640px) {
+    html, body {
+        height: 100%;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        -webkit-text-size-adjust: none;
+        padding: 0 !important;  /* ← ВАЖНО: убираем все padding */
+    }
+
+    header {
+        flex-shrink: 0;
+        padding-top: env(safe-area-inset-top);  /* ← ТОЛЬКО header */
+    }
+
+    main {
+        flex: 1 1 0;
+        min-height: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #view-arena {
+        display: flex !important;
+        flex-direction: column !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        height: 100% !important;
+    }
+
+    #view-arena > .bg-white.border-b {
+        flex-shrink: 0;
+    }
+
+    #chat-container {
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding-bottom: 60px !important;
+    }
+
+    #view-arena > .bg-white.border-t {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        flex-shrink: 0 !important;
+        background: white;
+        z-index: 999 !important;
+        padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        min-height: 48px !important;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    #view-history {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        height: 100% !important;
+        overflow-y: auto !important;
+        padding-top: env(safe-area-inset-top);  /* ← фикс для истории */
+    }
+
+    #view-history .max-w-4xl {
+        padding-bottom: 80px !important;
+    }
+
+    #verdict-container {
+        z-index: 1000 !important;
+        bottom: 60px !important;
+    }
+
+    #modal-session {
+        align-items: flex-end !important;
+    }
+
+    #modal-session > div {
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 85vh !important;
+    }
+}
+
+/* Горизонтальный режим */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+    header {
+        height: 48px !important;
+    }
+
+    #chat-container {
+        height: calc(100vh - 140px) !important;
+    }
+
+    .controls {
+        padding: 0.5rem !important;
+    }
+}
+
+</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden selection:bg-brand-100 selection:text-brand-700">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm flex-none">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 h-12 sm:h-14 md:h-16 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gradient-to-br from-brand-500 to-violet-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-500/25 shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                </div>
+                <h1 class="text-base sm:text-lg md:text-xl font-extrabold tracking-tight text-slate-800 truncate">Арена <span class="text-brand-600">Моделей</span></h1>
+            </div>
+            <nav class="flex bg-slate-100 p-0.5 sm:p-1 rounded-lg sm:rounded-xl shrink-0">
+                <button id="tab-arena" class="px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-sm bg-white text-slate-800 ring-1 ring-black/5" onclick="switchTab('arena')">💬 <span class="hidden sm:inline">Арена</span></button>
+                <button id="tab-history" class="px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-200/50" onclick="switchTab('history')">🗂️ <span class="hidden sm:inline">История</span></button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden relative">
+
+        <!-- Arena View -->
+        <div id="view-arena" class="absolute inset-0 flex flex-col transition-opacity duration-300">
+            <!-- Controls -->
+            <div class="bg-white border-b border-slate-200 p-3 sm:p-4 flex-none z-20 shadow-sm">
+                <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end">
+                    <div class="md:col-span-3">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Модель А</label>
+                        <select id="model-a" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white outline-none transition-all hover:border-slate-300"></select>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Модель Б</label>
+                        <select id="model-b" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none transition-all hover:border-slate-300"></select>
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 ml-1">Тема диалога</label>
+                        <input id="topic" type="text" placeholder="Введите тему..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:bg-white outline-none transition-all hover:border-slate-300" value="Влияние искусственного интеллекта на будущее образования">
+                    </div>
+                    <div class="md:col-span-2 flex gap-2">
+                        <button id="btn-start" onclick="startArena()" class="flex-1 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold py-2.5 px-4 rounded-xl transition-all shadow-md shadow-brand-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>Старт</span>
+                        </button>
+                        <button id="btn-stop" onclick="stopArena()" class="hidden flex-none bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold w-12 py-2.5 px-0 rounded-xl transition-all shadow-md shadow-red-500/20 items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scroll-smooth bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
+                <div id="empty-state" class="flex flex-col items-center justify-center h-full text-slate-400 opacity-70 pb-10">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </div>
+                    <p class="text-lg font-medium">Готово к запуску</p>
+                    <p class="text-sm mt-1">Выберите модели и введите тему</p>
+                </div>
+                <!-- Messages -->
+                <div id="messages" class="max-w-4xl mx-auto space-y-8 pb-12"></div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="bg-white border-t border-slate-200 px-4 py-2 flex-none z-20 status-bar">
+                <div class="max-w-5xl mx-auto flex items-center justify-between text-xs text-slate-500">
+                    <div class="flex items-center gap-2">
+                        <div id="status-indicator" class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span id="status-text">Готов к работе</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span id="turn-counter">Ходов: 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verdict Panel -->
+            <div id="verdict-container" class="hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] p-4 sm:p-6 transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1) transform translate-y-full z-40 pb-safe">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="p-2 bg-amber-100 rounded-full text-amber-700 shadow-sm shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-base sm:text-lg font-bold text-slate-800">Вердикт Судьи</h3>
+                            <p class="text-xs text-slate-500">Анализ завершён</p>
+                        </div>
+                        <button onclick="closeVerdict()" class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600 shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+                    <div id="verdict-content" class="prose prose-slate prose-sm max-w-none text-slate-700 leading-relaxed whitespace-pre-line bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm font-mono text-xs overflow-y-auto max-h-[30vh]"></div>
+                </div>
+            </div>
+        </div>
+
+<!-- History View -->
+<div id="view-history" class="absolute inset-0 bg-slate-50 overflow-hidden hidden opacity-0 transition-opacity duration-300 z-10">
+    <div class="h-full overflow-y-auto p-3 sm:p-4 md:p-8" style="-webkit-overflow-scrolling: touch;">
+        <div class="max-w-4xl mx-auto pb-20">
+            <div class="flex items-center justify-between mb-6 sm:mb-8">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-800">История диалогов</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Просмотр и управление сохранёнными сессиями</p>
+                </div>
+                <button onclick="loadHistory()" class="text-xs sm:text-sm text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-2 bg-brand-50 hover:bg-brand-100 px-3 sm:px-4 py-2 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span class="hidden sm:inline">Обновить</span>
+                </button>
+            </div>
+
+            <div id="sessions-list" class="space-y-3 sm:space-y-4"></div>
+            <div id="history-empty" class="hidden text-center py-20">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <p class="text-slate-500 font-medium">Нет сохранённых диалогов</p>
+            </div>
+        </div>
+    </div>
+</div>
+    </main>
+
+    <!-- Session Detail Modal -->
+    <div id="modal-session" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-0 sm:p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full h-full sm:max-h-[85vh] sm:max-w-4xl flex flex-col transform scale-95 transition-transform duration-300 overflow-hidden ring-1 ring-slate-200">
+            <div class="flex-none p-3 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-white">
+                <div class="min-w-0 mr-2 sm:mr-4 flex-1">
+                    <h3 id="modal-topic" class="text-base sm:text-lg font-bold text-slate-800 truncate">Тема сессии</h3>
+                    <div id="modal-meta" class="text-[10px] sm:text-xs text-slate-500 mt-0.5 font-mono flex items-center gap-2 flex-wrap">
+                        <span class="w-2 h-2 rounded-full bg-slate-300 shrink-0"></span>
+                        <span class="truncate">ID сессии</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                    <button onclick="exportSession()" class="p-2 sm:p-2.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg sm:rounded-xl transition-colors" title="Экспорт в .txt">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    </button>
+                    <button onclick="deleteSession()" class="p-2 sm:p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg sm:rounded-xl transition-colors" title="Удалить">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                    <button onclick="closeModal()" class="p-2 sm:p-2.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg sm:rounded-xl transition-colors">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div id="modal-chat" class="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 bg-slate-50 min-h-0"></div>
+            <div id="modal-verdict" class="flex-none max-h-[35vh] overflow-y-auto p-3 sm:p-4 bg-amber-50/80 border-t border-amber-100 hidden">
+                <h4 class="text-[10px] sm:text-xs font-bold text-amber-700 uppercase mb-2 flex items-center gap-2 sticky top-0 bg-amber-50/80 py-1 -mt-1">
+                    <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Решение судьи
+                </h4>
+                <div id="modal-verdict-text" class="text-xs sm:text-sm text-slate-700 whitespace-pre-line font-mono leading-relaxed"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 sm:top-6 right-4 sm:right-6 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg shadow-slate-900/20 transform translate-x-[120%] transition-transform duration-300 z-[60] text-sm flex items-center gap-3 font-medium">
+        <span id="toast-icon" class="text-lg">ℹ️</span>
+        <span id="toast-msg">Сообщение</span>
+    </div>
+
+    <script>
+        // ===== STATE =====
+        const chatContainer = document.getElementById('chat-container');
+        const messagesDiv = document.getElementById('messages');
+        const statusText = document.getElementById('status-text');
+        const statusIndicator = document.getElementById('status-indicator');
+        const turnCounter = document.getElementById('turn-counter');
+        const startBtn = document.getElementById('btn-start');
+        const stopBtn = document.getElementById('btn-stop');
+
+        let evtSource = null;
+        let sessionId = null;
+        let isRunning = false;
+        let currentViewSession = null;
+        let currentSessionData = null;
+        let reconnectAttempts = 0;
+        let reconnectTimer = null;
+        let typingEls = {};
+        let currentTurn = 0;
+        const MAX_RECONNECT = 10;
+
+        // ===== UTILS =====
+        function updateStatus(text, type = 'ready') {
+            if (statusIndicator && statusText) {
+                statusText.textContent = text;
+                statusIndicator.className = 'w-2 h-2 rounded-full';
+                if (type === 'active') {
+                    statusIndicator.classList.add('bg-emerald-500', 'animate-pulse');
+                } else if (type === 'typing') {
+                    statusIndicator.classList.add('bg-amber-500', 'animate-pulse');
+                } else if (type === 'error') {
+                    statusIndicator.classList.add('bg-red-500');
+                } else {
+                    statusIndicator.classList.add('bg-emerald-500');
+                }
+            }
+        }
+
+        function updateTurnCounter(turn) {
+            if (turnCounter) {
+                turnCounter.textContent = `Ходов: ${turn}`;
+            }
+        }
+
+        function addMessageBubble(model, text) {
+            const isA = model === 'A';
+            const div = document.createElement('div');
+            div.className = `flex w-full fade-in ${isA ? 'justify-start' : 'justify-end'}`;
+            div.innerHTML = `
+                <div class="max-w-[85%] md:max-w-[75%] rounded-2xl p-4 sm:p-5 shadow-sm ${isA ? 'bg-emerald-50 text-emerald-950 rounded-tl-none border border-emerald-100' : 'bg-blue-50 text-blue-950 rounded-tr-none border border-blue-100'}">
+                    <div class="flex items-center gap-2 mb-2.5 opacity-70">
+                        <div class="w-2.5 h-2.5 rounded-full ${isA ? 'bg-emerald-500' : 'bg-blue-500'} ring-2 ring-white"></div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest">Модель ${model}</span>
+                    </div>
+                    <div class="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap font-medium">${escapeHtml(text)}</div>
+                </div>
+            `;
+            messagesDiv.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addTypingIndicator(model) {
+            if (typingEls[model]) return;
+            const isA = model === 'A';
+            const div = document.createElement('div');
+            div.id = `typing-${model}`;
+            typingEls[model] = div;
+            div.className = `flex w-full fade-in ${isA ? 'justify-start' : 'justify-end'}`;
+            div.innerHTML = `
+                <div class="rounded-2xl p-4 shadow-sm bg-white border border-slate-100 ${isA ? 'rounded-tl-none' : 'rounded-tr-none'}">
+                    <div class="flex space-x-1.5 h-6 items-center px-1">
+                        <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(div);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator(model) {
+            if (typingEls[model]) {
+                const el = typingEls[model];
+                el.style.opacity = '0';
+                el.style.transform = 'scale(0.9)';
+                setTimeout(() => el.remove(), 200);
+                delete typingEls[model];
+            }
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' });
+            }, 50);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function setUIState(running) {
+            isRunning = running;
+            startBtn.classList.toggle('hidden', running);
+            stopBtn.classList.toggle('hidden', !running);
+            stopBtn.classList.toggle('flex', running);
+            document.getElementById('model-a').disabled = running;
+            document.getElementById('model-b').disabled = running;
+            document.getElementById('topic').disabled = running;
+        }
+
+        function cleanup() {
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            if (evtSource) {
+                evtSource.close();
+                evtSource = null;
+            }
+            setUIState(false);
+            reconnectAttempts = 0;
+        }
+
+        // ===== TABS =====
+function switchTab(tab) {
+    const arenaBtn = document.getElementById('tab-arena');
+    const historyBtn = document.getElementById('tab-history');
+    const arenaView = document.getElementById('view-arena');
+    const historyView = document.getElementById('view-history');
+
+    if (tab === 'arena') {
+        arenaBtn.className = "px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-sm bg-white text-slate-800 ring-1 ring-black/5";
+        historyBtn.className = "px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-200/50";
+
+        arenaView.classList.remove('hidden', 'opacity-0');
+        historyView.classList.add('hidden', 'opacity-0');
+
+        // ✅ Принудительно обновляем скролл
+        setTimeout(() => {
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) chatContainer.style.overflowY = 'auto';
+        }, 50);
+    } else {
+        historyBtn.className = "px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-semibold transition-all shadow-sm bg-white text-slate-800 ring-1 ring-black/5";
+        arenaBtn.className = "px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-500 hover:text-slate-700 hover:bg-slate-200/50";
+
+        arenaView.classList.add('hidden', 'opacity-0');
+        historyView.classList.remove('hidden', 'opacity-0');
+
+        loadHistory();
+
+        // ✅ Принудительно обновляем скролл
+        setTimeout(() => {
+            const historyScroll = historyView.querySelector('.overflow-y-auto');
+            if (historyScroll) historyScroll.style.overflowY = 'auto';
+        }, 50);
+    }
+}
+
+        // ===== MODELS =====
+        async function fetchModels() {
+            try {
+                const res = await fetch('/api/models');
+                const data = await res.json();
+                const models = data.models || [];
+                const selA = document.getElementById('model-a');
+                const selB = document.getElementById('model-b');
+                const options = models.map(m => `<option value="${m}">${m}</option>`).join('');
+                selA.innerHTML = options;
+                selB.innerHTML = options;
+                if (models.length > 1) selB.selectedIndex = 1;
+            } catch (e) {
+                console.error('Failed to fetch models', e);
+            }
+        }
+
+        // ===== ARENA =====
+        async function startArena() {
+            if (isRunning) return;
+            const topic = document.getElementById('topic').value.trim();
+            if (!topic) return showToast('Пожалуйста, введите тему', 'error');
+
+            setUIState(true);
+            messagesDiv.innerHTML = '';
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('verdict-container').classList.add('hidden', 'translate-y-full');
+            document.getElementById('verdict-container').classList.remove('translate-y-0');
+
+            currentTurn = 0;
+            updateTurnCounter(0);
+            updateStatus('Запуск арены...', 'active');
+
+            try {
+                const resp = await fetch('/api/arena/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic,
+                        model_a: document.getElementById('model-a').value,
+                        model_b: document.getElementById('model-b').value,
+                        max_turns: 12
+                    })
+                });
+                const data = await resp.json();
+                sessionId = data.session_id;
+                evtSource = new EventSource(`/api/arena/stream/${sessionId}`);
+                attachEventHandlers(evtSource);
+            } catch (err) {
+                console.error('Ошибка запуска арены:', err);
+                updateStatus(`Ошибка: ${err.message}`, 'error');
+                cleanup();
+                setUIState(false);
+            }
+        }
+
+        function stopArena() {
+            if (isRunning) {
+                updateStatus('Остановка...', 'typing');
+                setUIState(false);
+            }
+            if (sessionId) {
+                fetch(`/api/arena/stop/${sessionId}`, { method: 'POST' })
+                    .catch(err => console.error('Ошибка остановки:', err));
+            }
+            cleanup();
+        }
+
+        // ===== SSE HANDLERS =====
+        function attachEventHandlers(source) {
+            source.onmessage = (e) => {
+                if (!e.data || e.data.startsWith(':')) return;
+                try {
+                    const d = JSON.parse(e.data);
+                    if (d.type === 'typing') {
+                        updateStatus(`Модель ${d.model} печатает...`, 'typing');
+                        addTypingIndicator(d.model);
+                    } else if (d.type === 'message') {
+                        removeTypingIndicator(d.model);
+                        addMessageBubble(d.model, d.content);
+                        updateStatus('Диалог активен', 'active');
+                        currentTurn++;
+                        updateTurnCounter(Math.ceil(currentTurn / 2));
+                        reconnectAttempts = 0;
+                    } else if (d.type === 'error') {
+                        removeTypingIndicator(d.model);
+                        addMessageBubble(d.model, `⚠️ ${d.error}`);
+                        updateStatus(`Ошибка: ${d.error}`, 'error');
+                    } else if (d.type === 'judge_thinking') {
+                        updateStatus('Судья анализирует...', 'typing');
+                    } else if (d.type === 'verdict') {
+                        showVerdict(d.content);
+                        updateStatus('Анализ завершён', 'ready');
+                    } else if (d.type === 'stopped' || d.type === 'finished') {
+                        cleanup();
+                        updateStatus(d.type === 'stopped' ? 'Диалог остановлен' : 'Диалог завершён', 'ready');
+                        showToast(d.type === 'stopped' ? '⏹ Диалог остановлен' : '✅ Диалог завершён', 'success');
+                        setUIState(false);
+                        loadHistory();
+                    }
+                } catch (err) {
+                    console.error('Parse error:', err, e.data);
+                }
+            };
+
+            source.onerror = (err) => {
+                console.warn('SSE error:', err);
+                if (sessionId && isRunning && reconnectAttempts < MAX_RECONNECT) {
+                    reconnectAttempts++;
+                    updateStatus(`Переподключение (${reconnectAttempts}/${MAX_RECONNECT})...`, 'typing');
+                    if (evtSource) {
+                        evtSource.close();
+                        evtSource = null;
+                    }
+                    const delay = Math.min(3000, 1000 * reconnectAttempts) + Math.random() * 500;
+                    reconnectTimer = setTimeout(() => {
+                        reconnectTimer = null;
+                        if (sessionId && isRunning) {
+                            evtSource = new EventSource(`/api/arena/stream/${sessionId}`);
+                            attachEventHandlers(evtSource);
+                        }
+                    }, delay);
+                } else {
+                    cleanup();
+                    updateStatus('Соединение потеряно', 'error');
+                }
+            };
+        }
+
+        function showVerdict(text) {
+            const el = document.getElementById('verdict-container');
+            const content = document.getElementById('verdict-content');
+            let formatted = text
+                .replace(/\*\*/g, '')
+                .replace(/\*/g, '•')
+                .replace(/Модель А сильные стороны:/g, '\n🟢 СИЛЬНЫЕ СТОРОНЫ А:\n•')
+                .replace(/Модель А слабые стороны:/g, '\n🔻 СЛАБЫЕ СТОРОНЫ А:\n•')
+                .replace(/Модель Б сильные стороны:/g, '\n🔵 СИЛЬНЫЕ СТОРОНЫ Б:\n•')
+                .replace(/Модель Б слабые стороны:/g, '\n🔻 СЛАБЫЕ СТОРОНЫ Б:\n•')
+                .replace(/ВЕРДИКТ:/g, '\n⚖️ ВЕРДИКТ:')
+                .replace(/ОБОСНОВАНИЕ:/g, '\n📝 ОБОСНОВАНИЕ:');
+            content.textContent = formatted;
+            el.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                el.classList.remove('translate-y-full');
+                el.classList.add('translate-y-0');
+            });
+        }
+
+        function closeVerdict() {
+            const el = document.getElementById('verdict-container');
+            el.classList.remove('translate-y-0');
+            el.classList.add('translate-y-full');
+            setTimeout(() => el.classList.add('hidden'), 500);
+        }
+
+        // ===== HISTORY =====
+async function loadHistory() {
+    const list = document.getElementById('sessions-list');
+    const empty = document.getElementById('history-empty');
+    list.innerHTML = '';
+
+    try {
+        const resp = await fetch('/api/sessions');
+        const data = await resp.json();
+
+        if (!data.sessions || data.sessions.length === 0) {
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        empty.classList.add('hidden');
+
+        data.sessions.forEach(s => {
+            const item = document.createElement('div');
+            item.className = 'bg-white rounded-xl border border-slate-200 p-4 sm:p-5 hover:shadow-lg hover:border-brand-200 transition-all cursor-pointer group relative overflow-hidden';
+            item.onclick = () => openSessionModal(s.id);
+
+            const statusColor = s.status === 'finished' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                s.status === 'stopped' ? 'bg-red-100 text-red-700 border-red-200' :
+                                'bg-amber-100 text-amber-700 border-amber-200';
+            const statusText = s.status === 'finished' ? 'Завершён' : s.status === 'stopped' ? 'Остановлен' : 'Активен';
+
+            // ✅ Проверяем, что модели существуют
+            const modelA = s.model_a || '?';
+            const modelB = s.model_b || '?';
+
+            item.innerHTML = `
+                <div class="absolute inset-0 bg-gradient-to-r from-brand-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative flex items-start justify-between gap-3 sm:gap-4">
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-slate-800 truncate text-base sm:text-lg group-hover:text-brand-700 transition-colors">${escapeHtml(s.topic || 'Без темы')}</h4>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-slate-500">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                <span class="font-mono truncate max-w-[120px] sm:max-w-[150px]" title="${modelA}">${modelA}</span>
+                            </div>
+                            <span class="text-slate-300">vs</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                                <span class="font-mono truncate max-w-[120px] sm:max-w-[150px]" title="${modelB}">${modelB}</span>
+                            </div>
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-3 font-medium flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            ${new Date(s.started).toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2 shrink-0">
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${statusColor}">${statusText}</span>
+                        ${s.verdict ? '<span class="text-xs text-brand-600 font-bold bg-brand-50 px-2 py-1 rounded-md border border-brand-100">🏆 Вердикт</span>' : ''}
+                    </div>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    } catch (e) {
+        list.innerHTML = `<div class="text-red-500 text-center py-8">Ошибка: ${e.message}</div>`;
+        console.error('Ошибка загрузки истории:', e);
+    }
+}
+
+async function openSessionModal(sid) {
+    currentViewSession = sid;
+    const modal = document.getElementById('modal-session');
+    const modalChat = document.getElementById('modal-chat');
+
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+        modal.querySelector('div').classList.add('scale-100');
+    });
+
+    modalChat.innerHTML = '<div class="flex flex-col items-center justify-center py-12 text-slate-400"><svg class="animate-spin h-8 w-8 text-brand-500 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-sm">Загрузка диалога...</span></div>';
+    document.getElementById('modal-verdict').classList.add('hidden');
+
+    try {
+        // Загружаем сообщения
+        const resp = await fetch(`/api/session/${sid}`);
+        const data = await resp.json();
+
+        // Загружаем метаданные сессии
+        const sesRes = await fetch('/api/sessions');
+        const sesData = await sesRes.json();
+        const sessionInfo = sesData.sessions.find(s => s.id === sid);
+
+        // ✅ СОХРАНЯЕМ ВСЕ ДАННЫЕ В currentSessionData
+        currentSessionData = {
+            ...data,
+            topic: sessionInfo?.topic || 'Без темы',
+            model_a: sessionInfo?.model_a || '?',
+            model_b: sessionInfo?.model_b || '?',
+            verdict: sessionInfo?.verdict || null
+        };
+
+        if (sessionInfo) {
+            document.getElementById('modal-topic').textContent = sessionInfo.topic || 'Без темы';
+            document.getElementById('modal-meta').innerHTML = `
+                <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">A</span> ${sessionInfo.model_a || '?'}
+                <span class="text-slate-400 mx-1">vs</span>
+                <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">B</span> ${sessionInfo.model_b || '?'}
+            `;
+
+            if (sessionInfo.verdict) {
+                document.getElementById('modal-verdict').classList.remove('hidden');
+                document.getElementById('modal-verdict-text').textContent = sessionInfo.verdict;
+            }
+        } else {
+            // Если сессия не найдена в списке, пробуем взять данные из сообщений
+            document.getElementById('modal-topic').textContent = 'Без темы';
+            document.getElementById('modal-meta').innerHTML = `
+                <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">A</span> ?
+                <span class="text-slate-400 mx-1">vs</span>
+                <span class="px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">B</span> ?
+            `;
+        }
+
+        renderModalContent(data);
+    } catch (e) {
+        modalChat.innerHTML = '<div class="text-red-500 text-center py-8 bg-red-50 rounded-xl border border-red-100">Ошибка загрузки сессии</div>';
+        console.error('Ошибка загрузки сессии:', e);
+    }
+}
+
+        function renderModalContent(data) {
+            const chat = document.getElementById('modal-chat');
+            chat.innerHTML = '';
+            const msgs = data.messages.filter((m, i) => !(i === 0 && m.role === 'user'));
+            if (msgs.length === 0) {
+                chat.innerHTML = '<p class="text-center text-slate-400 py-8">Сообщений нет</p>';
+            } else {
+                msgs.forEach(m => {
+                    const isA = m.model === 'A';
+                    const div = document.createElement('div');
+                    div.className = `flex w-full fade-in ${isA ? 'justify-start' : 'justify-end'}`;
+                    div.innerHTML = `
+                        <div class="max-w-[85%] rounded-xl p-3 sm:p-4 shadow-sm ${isA ? 'bg-white border border-slate-200 text-slate-800' : 'bg-brand-50 border border-brand-100 text-brand-900'}">
+                            <div class="text-[10px] font-bold opacity-60 mb-1.5 uppercase tracking-wider flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full ${isA ? 'bg-emerald-500' : 'bg-blue-500'}"></div>${isA ? 'Модель А' : 'Модель Б'}</div>
+                            <div class="text-sm sm:text-[15px] whitespace-pre-wrap font-medium">${escapeHtml(m.content)}</div>
+                        </div>
+                    `;
+                    chat.appendChild(div);
+                });
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-session');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        async function deleteSession() {
+            if (!currentViewSession || !confirm('Удалить эту сессию безвозвратно?')) return;
+            try {
+                await fetch(`/api/session/${currentViewSession}`, { method: 'DELETE' });
+                showToast('Сессия удалена', 'success');
+                closeModal();
+                loadHistory();
+            } catch (e) {
+                showToast('Ошибка удаления', 'error');
+            }
+        }
+
+function exportSession() {
+    if (!currentSessionData) {
+        showToast('Нет данных для экспорта', 'error');
+        return;
+    }
+
+    // ✅ Получаем данные из currentSessionData
+    const topic = currentSessionData.topic || 'Не указана';
+    const modelA = currentSessionData.model_a || '?';
+    const modelB = currentSessionData.model_b || '?';
+    const verdict = currentSessionData.verdict || null;
+
+    let txt = `АРЕНА МОДЕЛЕЙ: ЭКСПОРТ\n`;
+    txt += `Дата: ${new Date().toLocaleString()}\n`;
+    txt += `ID: ${currentViewSession}\n`;
+    txt += `Модели: ${modelA} vs ${modelB}\n`;
+    txt += `Тема: ${topic}\n`;
+    txt += `${'='.repeat(50)}\n\n`;
+
+    // Проверяем, что messages существует
+    if (!currentSessionData.messages || currentSessionData.messages.length === 0) {
+        txt += `[Диалог пуст]\n`;
+    } else {
+        let messageCount = 0;
+        currentSessionData.messages.forEach((m, i) => {
+            // Пропускаем первое сообщение с темой
+            if (i === 0 && m.role === 'user') {
+                return;
+            }
+
+            // Экспортируем только сообщения моделей
+            if (m.model) {
+                const modelLabel = m.model === 'A' ? 'МОДЕЛЬ А' : 'МОДЕЛЬ Б';
+                const turnNumber = m.turn || Math.floor(messageCount / 2) + 1;
+                txt += `[${modelLabel}] (ход ${turnNumber}):\n${m.content}\n\n`;
+                messageCount++;
+            }
+        });
+    }
+
+    // Добавляем вердикт
+    if (verdict) {
+        txt += `${'='.repeat(50)}\n`;
+        txt += `ВЕРДИКТ СУДЬИ:\n${verdict}\n`;
+    }
+
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `arena_${currentViewSession.slice(0, 8)}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('Файл сохранён', 'success');
+}
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msgEl = document.getElementById('toast-msg');
+            msgEl.textContent = msg;
+            icon.textContent = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            toast.classList.remove('translate-x-[120%]');
+            toast.classList.add('translate-x-0');
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0');
+                toast.classList.add('translate-x-[120%]');
+            }, 3000);
+        }
+
+        // ===== INIT =====
+        fetchModels();
+        loadHistory();
+        document.getElementById('topic').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !isRunning) startArena();
+        });
+        document.getElementById('modal-session').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-session') closeModal();
+        });
+
+        // Блокировка скролла body при открытом модале
+        let originalOverflow = '';
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((m) => {
+                if (m.target.id === 'modal-session') {
+                    if (!m.target.classList.contains('hidden')) {
+                        originalOverflow = document.body.style.overflow;
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.body.style.overflow = originalOverflow;
+                    }
+                }
+            });
+        });
+        observer.observe(document.getElementById('modal-session'), { attributes: true, attributeFilter: ['class'] });
+    </script>
+</body>
+</html>
