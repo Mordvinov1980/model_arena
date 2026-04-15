@@ -1,6 +1,0 @@
-nohup: ignoring input
-OpenBLAS WARNING - could not determine the L2 cache size on this system, assuming 256k
-INFO:     Started server process [1118]
-INFO:     Waiting for application startup.
-/usr/local/lib/python3.12/site-packages/huggingface_hub/file_download.py:799: UserWarning: Not enough free disk space to download the file. The expected file size is: 483.55 MB. The target location /root/.cache/huggingface/hub/models--Systran--faster-whisper-small/blobs only has 100.22 MB free disk space.
-  warnings.warn(

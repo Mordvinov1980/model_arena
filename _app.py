@@ -19,7 +19,7 @@ from faster_whisper import WhisperModel
 # ========== КОНФИГ ==========
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 USE_GPU = torch.cuda.is_available()
-WHISPER_MODEL = "small"
+WHISPER_MODEL = "tiny"
 HISTORY_DIR = "conversations"
 MEMORY_DB = "long_term_memory.db"
 ARENA_DB = "arena.db"
@@ -394,7 +394,8 @@ async def lifespan(app: FastAPI):
     init_arena_db()
     init_memory_db()
     init_asr()
-    init_tts()
+    # TTS отключен из-за нехватки места на диске
+    print("⚠️ TTS отключен (недостаточно места)")
     print(f"📋 Модели: {get_available_models()}")
     print("="*50)
     yield
@@ -404,7 +405,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 @app.get("/")
 async def root():
-    return FileResponse("index.html") if os.path.exists("index.html") else HTMLResponse("<h1>Index.html not found</h1>")
+    return FileResponse("_index.html") if os.path.exists("_index.html") else HTMLResponse("<h1>_index.html not found</h1>")
 
 @app.get("/api/models")
 async def list_models():

@@ -1,0 +1,11 @@
+nohup: ignoring input
+INFO:     Started server process [4602]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 98] error while attempting to bind on address ('0.0.0.0', 8080): [errno 98] address already in use
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+🏟️ Arena v2.4 — запуск на http://0.0.0.0:8080
+⚖️ Судья: ruadapt-qwen2.5-14b:latest
+🎭 Модели: llama3.2:latest ↔127.0.0.1 - - [15/Apr/2026 22:02:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 22:02:05] "GET / HTTP/1.1" 200 -
